@@ -1,6 +1,8 @@
 plugins {
-    id 'net.fabricmc.fabric-loom' version '1.18-SNAPSHOT'
-    id 'maven-publish'
+    id 'java'
+    id 'idea'
+    id 'eclipse'
+    id 'net.minecraftforge.gradle' version '[7.0.17,8)'
 }
 
 version = project.mod_version
@@ -10,31 +12,42 @@ base {
     archivesName = project.archives_base_name
 }
 
-repositories {
-    mavenCentral()
-    maven { url = 'https://maven.fabricmc.net/' }
-}
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
-dependencies {
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    // Minecraft 26.x is unobfuscated; use the non-remapping Loom plugin.
-    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-}
+minecraft {
+    runs {
+        configureEach {
+            workingDir = layout.projectDirectory.dir('run')
+            systemProperty 'eventbus.api.strictRuntimeChecks', 'true'
+        }
 
-processResources {
-    inputs.property "version", project.version
-    filesMatching("fabric.mod.json") {
-        expand "version": inputs.properties.version
+        register('client')
+
+        register('server') {
+            args '--nogui'
+        }
+
+        register('gameTestServer')
     }
 }
 
+repositories {
+    minecraft.mavenizer(it)
+    maven fg.forgeMaven
+    maven fg.minecraftLibsMaven
+    mavenCentral()
+}
+
+dependencies {
+    implementation minecraft.dependency("net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}")
+    annotationProcessor 'net.minecraftforge:eventbus-validator:7.0.1'
+}
+
 tasks.withType(JavaCompile).configureEach {
-    it.options.release = 25
+    options.encoding = 'UTF-8'
+    options.release = 25
 }
 
 java {
     withSourcesJar()
-    sourceCompatibility = JavaVersion.VERSION_25
-    targetCompatibility = JavaVersion.VERSION_25
 }
