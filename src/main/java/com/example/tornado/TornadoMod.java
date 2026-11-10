@@ -1,10 +1,10 @@
 package com.example.tornado;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.commands.Commands;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -27,34 +27,40 @@ import java.util.List;
  * Server-side only logic: a moving vortex that lifts entities, rips weak blocks
  * into flying debris and renders a rotating funnel with particles.
  */
-public class TornadoMod implements ModInitializer {
+@Mod(TornadoMod.MOD_ID)
+public class TornadoMod {
+
+    public static final String MOD_ID = "tornado_realism";
 
     private static final List<Tornado> ACTIVE = new ArrayList<>();
 
-    @Override
-    public void onInitialize() {
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
-            dispatcher.register(Commands.literal("tornado")
-                .requires(src -> src.permissions().hasPermission(Permissions.COMMANDS_MODERATOR))
-                .executes(ctx -> spawn(ctx.getSource().getLevel(), ctx.getSource().getPosition(), 2, ctx.getSource()))
-                .then(Commands.argument("ef", IntegerArgumentType.integer(0, 5))
-                    .executes(ctx -> spawn(ctx.getSource().getLevel(), ctx.getSource().getPosition(),
-                        IntegerArgumentType.getInteger(ctx, "ef"), ctx.getSource()))));
-            dispatcher.register(Commands.literal("tornado_clear")
-                .requires(src -> src.permissions().hasPermission(Permissions.COMMANDS_MODERATOR))
-                .executes(ctx -> {
-                    ACTIVE.clear();
-                    return 1;
-                }));
-        });
+    public TornadoMod() {
+        RegisterCommandsEvent.BUS.addListener(this::registerCommands);
+        TickEvent.ServerTickEvent.Post.BUS.addListener(event -> tickTornadoes());
+    }
 
-        ServerTickEvents.END_SERVER_TICK.register(server -> {
-            Iterator<Tornado> it = ACTIVE.iterator();
-            while (it.hasNext()) {
-                Tornado t = it.next();
-                if (!t.tick()) it.remove();
-            }
-        });
+    private void registerCommands(RegisterCommandsEvent event) {
+        var dispatcher = event.getDispatcher();
+        dispatcher.register(Commands.literal("tornado")
+            .requires(src -> src.permissions().hasPermission(Permissions.COMMANDS_MODERATOR))
+            .executes(ctx -> spawn(ctx.getSource().getLevel(), ctx.getSource().getPosition(), 2, ctx.getSource()))
+            .then(Commands.argument("ef", IntegerArgumentType.integer(0, 5))
+                .executes(ctx -> spawn(ctx.getSource().getLevel(), ctx.getSource().getPosition(),
+                    IntegerArgumentType.getInteger(ctx, "ef"), ctx.getSource()))));
+        dispatcher.register(Commands.literal("tornado_clear")
+            .requires(src -> src.permissions().hasPermission(Permissions.COMMANDS_MODERATOR))
+            .executes(ctx -> {
+                ACTIVE.clear();
+                return 1;
+            }));
+    }
+
+    private void tickTornadoes() {
+        Iterator<Tornado> it = ACTIVE.iterator();
+        while (it.hasNext()) {
+            Tornado t = it.next();
+            if (!t.tick()) it.remove();
+        }
     }
 
     private static int spawn(ServerLevel level, Vec3 pos, int ef, net.minecraft.commands.CommandSourceStack src) {
