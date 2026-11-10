@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "tornado_realism",
+  "version": "${version}",
+  "name": "Tornado Realism",
+  "description": "Realistic tornadoes: rotating funnel, debris, lifting mobs and blocks. Command: /tornado [EF 0-5]",
+  "authors": ["You"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.example.tornado.TornadoMod"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "minecraft": "~26.3",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}
