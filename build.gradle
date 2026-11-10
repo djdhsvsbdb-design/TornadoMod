@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.18-SNAPSHOT'
+    id 'net.fabricmc.fabric-loom' version '1.18-SNAPSHOT'
     id 'maven-publish'
 }
 
@@ -17,7 +17,7 @@ repositories {
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    // Minecraft 26.x is unobfuscated: no mappings, no modImplementation
+    // Minecraft 26.x is unobfuscated; use the non-remapping Loom plugin.
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
     implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 }
