@@ -1,0 +1,27 @@
+modLoader="javafml"
+loaderVersion="[0,)"
+license="MIT"
+
+[[mods]]
+modId="tornado_realism"
+version="${file.jarVersion}"
+displayName="Tornado Realism"
+authors="TornadoMod Team"
+description='''
+Realistic tornadoes with a rotating funnel, debris, and entity lift.
+Commands: /tornado [EF 0-5] and /tornado_clear.
+'''
+
+[[dependencies.tornado_realism]]
+modId="forge"
+mandatory=true
+versionRange="[66.1.5,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.tornado_realism]]
+modId="minecraft"
+mandatory=true
+versionRange="[26.3,26.4)"
+ordering="NONE"
+side="BOTH"
