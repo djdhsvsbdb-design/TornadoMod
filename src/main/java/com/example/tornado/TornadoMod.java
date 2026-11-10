@@ -8,8 +8,10 @@ import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -33,13 +35,13 @@ public class TornadoMod implements ModInitializer {
     public void onInitialize() {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             dispatcher.register(Commands.literal("tornado")
-                .requires(src -> src.hasPermission(2))
+                .requires(src -> src.permissions().hasPermission(Permissions.COMMANDS_MODERATOR))
                 .executes(ctx -> spawn(ctx.getSource().getLevel(), ctx.getSource().getPosition(), 2, ctx.getSource()))
                 .then(Commands.argument("ef", IntegerArgumentType.integer(0, 5))
                     .executes(ctx -> spawn(ctx.getSource().getLevel(), ctx.getSource().getPosition(),
                         IntegerArgumentType.getInteger(ctx, "ef"), ctx.getSource()))));
             dispatcher.register(Commands.literal("tornado_clear")
-                .requires(src -> src.hasPermission(2))
+                .requires(src -> src.permissions().hasPermission(Permissions.COMMANDS_MODERATOR))
                 .executes(ctx -> {
                     ACTIVE.clear();
                     return 1;
@@ -177,7 +179,9 @@ public class TornadoMod implements ModInitializer {
                 nvz = Math.max(-cap, Math.min(cap, nvz));
                 nvy = Math.max(-0.6, Math.min(0.9 + ef * 0.1, nvy));
                 e.setDeltaMovement(nvx, nvy, nvz);
-                e.hurtMarked = true;
+                if (e instanceof ServerPlayer player) {
+                    player.connection.send(new ClientboundSetEntityMotionPacket(player));
+                }
                 e.fallDistance = 0; // fall damage is replaced by being dropped from height only on EF3+
                 if (ef >= 3 && k > 0.6 && age % 20 == 0) {
                     e.hurtServer(level, level.damageSources().flyIntoWall(), 1.0f + ef);
@@ -209,7 +213,7 @@ public class TornadoMod implements ModInitializer {
                     (x - bx) * 0.05 + (level.getRandom().nextDouble() - 0.5) * 0.3,
                     0.5 + ef * 0.12,
                     (z - bz) * 0.05 + (level.getRandom().nextDouble() - 0.5) * 0.3);
-                fb.hurtMarked = true;
+
             }
         }
     }
